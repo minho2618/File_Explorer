@@ -1,7 +1,12 @@
+#include <dirent.h>
 #include <iostream>
 #include <ncurses.h>
 #include <stack>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #define MAX_PATH_LEN 1024
@@ -16,6 +21,9 @@ string showDir(stack<string> stc);
 
 // 디렉토리 내 파일 표시용
 void showFile(WINDOW *win);
+
+// 디렉토리 내 파일 확인용
+void searchFile(string dirString, WINDOW *win);
 
 int main() {
     // dirLocal : 현재 디렉토리 위치
@@ -60,6 +68,7 @@ int main() {
 
     wprintw(dirLocal, showDir(dirLocation).c_str());
     showFile(fileIn1);
+    searchFile(showDir(dirLocation), fileIn1);
     showFile(fileIn2);
     wprintw(command, "F1: Copy F2: Move F3: Delete F4: Rename F5: New File F6: "
                      "New Directory");
@@ -93,11 +102,6 @@ int main() {
 void showFile(WINDOW *win) {
     mvwprintw(win, 1, 1, ".");
     mvwprintw(win, 2, 1, "..");
-    mvwprintw(win, 3, 1, "dev");
-    mvwprintw(win, 4, 1, "programming");
-    mvwprintw(win, 5, 1, "test.txt");
-    mvwprintw(win, 6, 1, "text.txt");
-    mvwprintw(win, 7, 1, "project.c");
 }
 
 stack<string> currentDir() {
@@ -121,13 +125,13 @@ stack<string> currentDir() {
             break;
 
         cursor = dirStr.find("/", 1);
-        cout << cursor << endl;
+        // cout << cursor << endl;
 
         stc.push(dirStr.substr(1, cursor - 1));
         stc.top();
 
         dirStr.erase(0, cursor);
-        cout << dirStr << endl;
+        // cout << dirStr << endl;
     }
 
     return stc;
@@ -147,4 +151,16 @@ string showDir(stack<string> stc) {
     }
 
     return dirStr;
+}
+
+void searchFile(string dirString, WINDOW *win) {
+    DIR *dirp;
+    struct dirent *dirInfo;
+
+    int i = 3;
+
+    dirp = opendir(dirString.c_str());
+    while ((dirInfo = readdir(dirp)) != NULL) {
+        mvwprintw(win, i++, 1, dirInfo->d_name);
+    }
 }
